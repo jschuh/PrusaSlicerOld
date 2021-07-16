@@ -293,6 +293,7 @@ void SeamPlacer::init(const Print& print)
 
 
 Point SeamPlacer::get_seam(const Layer& layer, const SeamPosition seam_position,
+               const float seam_preferred_direction,
                const ExtrusionLoop& loop, Point last_pos, coordf_t nozzle_dmr,
                const PrintObject* po, bool was_clockwise, const EdgeGrid::Grid* lower_layer_edge_grid)
 {
@@ -341,12 +342,13 @@ Point SeamPlacer::get_seam(const Layer& layer, const SeamPosition seam_position,
                 }
             }
         }
-        else if (seam_position == spRear) {
+        else if (seam_position == spDirection) {
             // Object is centered around (0,0) in its current coordinate system.
             last_pos.x() = 0;
             last_pos.y() += coord_t(3. * po->bounding_box().radius());
             last_pos_weight = 5.f;
-        } if (seam_position == spNearest) {
+            last_pos.rotate((M_PI / 180.f) * seam_preferred_direction);
+        } else if (seam_position == spNearest) {
             // last_pos already contains current nozzle position
         }
 

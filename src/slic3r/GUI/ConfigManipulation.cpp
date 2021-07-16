@@ -236,7 +236,8 @@ void ConfigManipulation::toggle_print_fff_options(DynamicPrintConfig* config)
     bool have_perimeters = config->opt_int("perimeters") > 0;
     for (auto el : { "extra_perimeters", "ensure_vertical_shell_thickness", "thin_walls", "overhangs",
                     "seam_position", "external_perimeters_first", "external_perimeter_extrusion_width",
-                    "perimeter_speed", "small_perimeter_speed", "external_perimeter_speed" })
+                    "perimeter_speed", "small_perimeter_speed", "external_perimeter_speed",
+                    "seam_preferred_direction"})
         toggle_field(el, have_perimeters);
 
     bool have_infill = config->option<ConfigOptionPercent>("fill_density")->value > 0;
@@ -332,6 +333,8 @@ void ConfigManipulation::toggle_print_fff_options(DynamicPrintConfig* config)
 
     bool have_avoid_crossing_perimeters = config->opt_bool("avoid_crossing_perimeters");
     toggle_field("avoid_crossing_perimeters_max_detour", have_avoid_crossing_perimeters);
+
+    toggle_field("seam_preferred_direction", config->opt_enum<SeamPosition>("seam_position") == spDirection);
 }
 
 void ConfigManipulation::update_print_sla_config(DynamicPrintConfig* config, const bool is_global_config/* = false*/)
