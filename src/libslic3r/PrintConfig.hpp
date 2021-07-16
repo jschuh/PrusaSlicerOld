@@ -92,7 +92,7 @@ enum SupportMaterialInterfacePattern {
 };
 
 enum SeamPosition {
-    spRandom, spNearest, spAligned, spRear
+    spRandom, spNearest, spAligned, spDirection
 };
 
 enum SLAMaterial {
@@ -467,8 +467,7 @@ PRINT_CONFIG_CLASS_DEFINE(
     ((ConfigOptionFloat,               raft_first_layer_expansion))
     ((ConfigOptionInt,                 raft_layers))
     ((ConfigOptionEnum<SeamPosition>,  seam_position))
-//  ((ConfigOptionFloat,               seam_preferred_direction))
-//  ((ConfigOptionFloat,               seam_preferred_direction_jitter))
+    ((ConfigOptionFloat,               seam_preferred_direction))
     ((ConfigOptionFloat,               slice_closing_radius))
     ((ConfigOptionEnum<SlicingMode>,   slicing_mode))
     ((ConfigOptionBool,                support_material))

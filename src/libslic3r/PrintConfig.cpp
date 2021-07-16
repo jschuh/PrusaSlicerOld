@@ -148,7 +148,7 @@ static t_config_enum_values s_keys_map_SeamPosition {
     { "random",         spRandom },
     { "nearest",        spNearest },
     { "aligned",        spAligned },
-    { "rear",           spRear }
+    { "direction",      spDirection }
 };
 CONFIG_OPTION_ENUM_DEFINE_STATIC_MAPS(SeamPosition)
 
@@ -2162,35 +2162,21 @@ void PrintConfigDef::init_fff_params()
     def->enum_values.push_back("random");
     def->enum_values.push_back("nearest");
     def->enum_values.push_back("aligned");
-    def->enum_values.push_back("rear");
+    def->enum_values.push_back("direction");
     def->enum_labels.push_back(L("Random"));
     def->enum_labels.push_back(L("Nearest"));
     def->enum_labels.push_back(L("Aligned"));
-    def->enum_labels.push_back(L("Rear"));
+    def->enum_labels.push_back(L("Direction"));
     def->mode = comSimple;
     def->set_default_value(new ConfigOptionEnum<SeamPosition>(spAligned));
 
-#if 0
     def = this->add("seam_preferred_direction", coFloat);
-//    def->gui_type = ConfigOptionDef::GUIType::slider;
-    def->label = L("Direction");
+    def->label = L("Seam position - Preferred direction");
     def->sidetext = L("°");
-    def->full_label = L("Preferred direction of the seam");
-    def->tooltip = L("Seam preferred direction");
+    def->tooltip = L("Preferred direction of seam location.");
     def->min = 0;
     def->max = 360;
     def->set_default_value(new ConfigOptionFloat(0));
-
-    def = this->add("seam_preferred_direction_jitter", coFloat);
-//    def->gui_type = ConfigOptionDef::GUIType::slider;
-    def->label = L("Jitter");
-    def->sidetext = L("°");
-    def->full_label = L("Seam preferred direction jitter");
-    def->tooltip = L("Preferred direction of the seam - jitter");
-    def->min = 0;
-    def->max = 360;
-    def->set_default_value(new ConfigOptionFloat(30));
-#endif
 
     def = this->add("skirt_distance", coFloat);
     def->label = L("Distance from brim/object");
@@ -3719,6 +3705,8 @@ void PrintConfigDef::handle_legacy(t_config_option_key &opt_key, std::string &va
         opt_key = "printhost_apikey";
     } else if (opt_key == "preset_name") {
         opt_key = "preset_names";
+    } else if (opt_key == "seam_position" && value == "rear") {
+        value = "direction";
     }
 
     // Ignore the following obsolete configuration keys:

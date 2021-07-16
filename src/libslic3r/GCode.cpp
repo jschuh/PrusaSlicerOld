@@ -2420,6 +2420,7 @@ std::string GCode::extrude_loop(ExtrusionLoop loop, std::string description, dou
     bool was_clockwise = loop.make_counter_clockwise();
 
     SeamPosition seam_position = m_config.seam_position;
+    float seam_preferred_direction = m_config.seam_preferred_direction;
     if (loop.loop_role() == elrSkirt)
         seam_position = spNearest;
 
@@ -2432,7 +2433,7 @@ std::string GCode::extrude_loop(ExtrusionLoop loop, std::string description, dou
         const EdgeGrid::Grid* edge_grid_ptr = (lower_layer_edge_grid && *lower_layer_edge_grid)
                                                 ? lower_layer_edge_grid->get()
                                                 : nullptr;
-        Point seam = m_seam_placer.get_seam(*m_layer, seam_position, loop,
+        Point seam = m_seam_placer.get_seam(*m_layer, seam_position, seam_preferred_direction, loop,
                          last_pos, EXTRUDER_CONFIG(nozzle_diameter),
                          (m_layer == NULL ? nullptr : m_layer->object()),
                          was_clockwise, edge_grid_ptr);
