@@ -468,7 +468,6 @@ PRINT_CONFIG_CLASS_DEFINE(
     ((ConfigOptionInt,                 raft_layers))
     ((ConfigOptionEnum<SeamPosition>,  seam_position))
     ((ConfigOptionFloat,               seam_preferred_direction))
-//  ((ConfigOptionFloat,               seam_preferred_direction_jitter))
     ((ConfigOptionFloat,               slice_closing_radius))
     ((ConfigOptionEnum<SlicingMode>,   slicing_mode))
     ((ConfigOptionBool,                support_material))

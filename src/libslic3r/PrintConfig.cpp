@@ -2166,18 +2166,6 @@ void PrintConfigDef::init_fff_params()
     def->max = 360;
     def->set_default_value(new ConfigOptionFloat(0));
 
-#if 0
-    def = this->add("seam_preferred_direction_jitter", coFloat);
-//    def->gui_type = ConfigOptionDef::GUIType::slider;
-    def->label = L("Jitter");
-    def->sidetext = L("°");
-    def->full_label = L("Seam preferred direction jitter");
-    def->tooltip = L("Preferred direction of the seam - jitter");
-    def->min = 0;
-    def->max = 360;
-    def->set_default_value(new ConfigOptionFloat(30));
-#endif
-
     def = this->add("skirt_distance", coFloat);
     def->label = L("Distance from brim/object");
     def->tooltip = L("Distance between skirt and brim (when draft shield is not used) or objects.");
