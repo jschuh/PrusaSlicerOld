@@ -750,8 +750,8 @@ void PrintObject::slice_volumes()
 	                Layer *layer = m_layers[layer_id];
 	                // Apply size compensation and perform clipping of multi-part objects.
                     // Adjust the elephant foot compensation after the first layer assuming horizontal expansion is proportional to vertical.
-	                float elfoot = elephant_foot_compensation_scaled * layer->height / layer->print_z;
-                    if (elfoot < 10000.f) { // Ignore compensation values below 20 microns
+                    float elfoot = elephant_foot_compensation_scaled * pow(layer->height / layer->print_z, 2);
+                    if (elfoot < 10000.f) { // Ignore compensation values below 10 microns
                         elfoot = 0;
                     } else {
                         elephant_compensated_layers.grow_to_at_least(layer_id + 1);
