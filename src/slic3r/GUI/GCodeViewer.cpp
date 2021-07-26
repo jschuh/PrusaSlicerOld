@@ -486,6 +486,7 @@ void GCodeViewer::SequentialView::render(float legend_height) const
 const std::vector<GCodeViewer::Color> GCodeViewer::Extrusion_Role_Colors {{
     { 0.75f, 0.75f, 0.75f },   // erNone
     { 1.00f, 0.90f, 0.30f },   // erPerimeter
+    { 0.70f, 0.49f, 0.15f },   // erHiddenPerimeter
     { 1.00f, 0.49f, 0.22f },   // erExternalPerimeter
     { 0.12f, 0.12f, 1.00f },   // erOverhangPerimeter
     { 0.69f, 0.19f, 0.16f },   // erInternalInfill

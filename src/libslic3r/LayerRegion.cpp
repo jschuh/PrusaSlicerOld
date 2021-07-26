@@ -96,6 +96,12 @@ void LayerRegion::make_perimeters(const SurfaceCollection &slices, SurfaceCollec
     if (this->layer()->lower_layer != nullptr)
         // Cummulative sum of polygons over all the regions.
         g.lower_slices = &this->layer()->lower_layer->lslices;
+    ExPolygons layer_outline;
+    if (layer()->regions().size() != 1) {
+        static const float eps = float(scale_(layer()->object()->config().slice_closing_radius.value));
+        layer_outline = std::move(offset_ex(layer()->merged(eps), -eps));
+        g.layer_outline = &layer_outline;
+    }
     
     g.layer_id              = (int)this->layer()->id();
     g.ext_perimeter_flow    = this->flow(frExternalPerimeter);
