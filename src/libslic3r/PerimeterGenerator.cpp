@@ -193,45 +193,68 @@ static ExtrusionEntityCollection traverse_loops(const PerimeterGenerator &perime
         // detect overhanging/bridging perimeters
         ExtrusionPaths paths;
         const Polygon &polygon = loop.fuzzify ? fuzzified : loop.polygon;
+        Polylines polylines;
+        bool needs_reorder = false;
+
         if (loop.fuzzify) {
             fuzzified = loop.polygon;
             fuzzy_polygon(fuzzified, scaled<float>(perimeter_generator.config->fuzzy_skin_thickness.value), scaled<float>(perimeter_generator.config->fuzzy_skin_point_dist.value));
         }
+
         if (perimeter_generator.config->overhangs && perimeter_generator.layer_id > perimeter_generator.object_config->raft_layers
-            && ! ((perimeter_generator.object_config->support_material || perimeter_generator.object_config->support_material_enforce_layers > 0) && 
-                  perimeter_generator.object_config->support_material_contact_distance.value == 0)) {
-            // get non-overhang paths by intersecting this loop with the grown lower slices
-            extrusion_paths_append(
-                paths,
-                intersection_pl({ polygon }, perimeter_generator.lower_slices_polygons()),
-                role,
-                is_external ? perimeter_generator.ext_mm3_per_mm()           : perimeter_generator.mm3_per_mm(),
-                is_external ? perimeter_generator.ext_perimeter_flow.width() : perimeter_generator.perimeter_flow.width(),
-                (float)perimeter_generator.layer_height);
-            
+            && !((perimeter_generator.object_config->support_material || perimeter_generator.object_config->support_material_enforce_layers > 0) &&
+                perimeter_generator.object_config->support_material_contact_distance.value == 0)) {
             // get overhang paths by checking what parts of this loop fall 
             // outside the grown lower slices (thus where the distance between
             // the loop centerline and original lower slices is >= half nozzle diameter
-            extrusion_paths_append(
-                paths,
-                diff_pl({ polygon }, perimeter_generator.lower_slices_polygons()),
-                erOverhangPerimeter,
-                perimeter_generator.mm3_per_mm_overhang(),
-                perimeter_generator.overhang_flow.width(),
-                perimeter_generator.overhang_flow.height());
-            
-            // Reapply the nearest point search for starting point.
-            // We allow polyline reversal because Clipper may have randomly reversed polylines during clipping.
-            chain_and_reorder_extrusion_paths(paths, &paths.front().first_point());
-        } else {
-            ExtrusionPath path(role);
-            path.polyline   = polygon.split_at_first_point();
-            path.mm3_per_mm = is_external ? perimeter_generator.ext_mm3_per_mm()           : perimeter_generator.mm3_per_mm();
-            path.width      = is_external ? perimeter_generator.ext_perimeter_flow.width() : perimeter_generator.perimeter_flow.width();
-            path.height     = (float)perimeter_generator.layer_height;
-            paths.push_back(path);
+            Polylines bridge_polylines = std::move(diff_pl({ polygon }, perimeter_generator.lower_slices_polygons()));
+            if (!bridge_polylines.empty()) {
+                extrusion_paths_append(
+                    paths,
+                    bridge_polylines,
+                    erOverhangPerimeter,
+                    perimeter_generator.mm3_per_mm_overhang(),
+                    perimeter_generator.overhang_flow.width(),
+                    perimeter_generator.overhang_flow.height());
+                // get non-overhang paths by intersecting this loop with the grown lower slices
+                polylines = std::move(intersection_pl({ polygon }, perimeter_generator.lower_slices_polygons()));
+                needs_reorder = true;
+            }
         }
-        
+
+        // Create polylines if we had no bridges.
+        if (!needs_reorder && polylines.empty())
+            polylines.push_back(polygon.split_at_first_point());
+
+        // Mark external perimeters that are hidden (adjoining multi-material perimeters)
+        if (is_external && perimeter_generator.layer_outline) {
+            Polylines hidden_polylines = std::move(intersection_pl(polylines, perimeter_generator.layer_outline_polygons()));
+            if (!hidden_polylines.empty()) {
+                extrusion_paths_append(
+                    paths,
+                    hidden_polylines,
+                    erHiddenPerimeter,
+                    perimeter_generator.ext_mm3_per_mm(),
+                    perimeter_generator.ext_perimeter_flow.width(),
+                    (float)perimeter_generator.layer_height);
+                polylines = std::move(diff_pl(polylines, perimeter_generator.layer_outline_polygons()));
+                needs_reorder = true;
+            }
+        }
+
+        extrusion_paths_append(
+            paths,
+            polylines,
+            role,
+            is_external ? perimeter_generator.ext_mm3_per_mm()           : perimeter_generator.mm3_per_mm(),
+            is_external ? perimeter_generator.ext_perimeter_flow.width() : perimeter_generator.perimeter_flow.width(),
+            (float)perimeter_generator.layer_height);
+
+        // Reapply the nearest point search for starting point.
+        // We allow polyline reversal because Clipper may have randomly reversed polylines during clipping.
+        if (needs_reorder)
+            chain_and_reorder_extrusion_paths(paths, &paths.front().first_point());
+
         coll.append(ExtrusionLoop(std::move(paths), loop_role));
     }
     
@@ -316,6 +339,10 @@ void PerimeterGenerator::process()
         double nozzle_diameter = this->print_config->nozzle_diameter.get_at(this->config->perimeter_extruder-1);
         m_lower_slices_polygons = offset(*this->lower_slices, float(scale_(+nozzle_diameter/2)));
     }
+
+    // Clipping boundary used for identifying hidden perimeters.
+    if (this->layer_outline)
+        m_layer_outline_polygons = std::move(offset(*this->layer_outline, -float(ext_perimeter_flow.scaled_width())));
 
     // we need to process each island separately because we might have different
     // extra perimeters for each one

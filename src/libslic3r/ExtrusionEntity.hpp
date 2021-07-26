@@ -19,6 +19,7 @@ class Extruder;
 enum ExtrusionRole : uint8_t {
     erNone,
     erPerimeter,
+    erHiddenPerimeter,
     erExternalPerimeter,
     erOverhangPerimeter,
     erInternalInfill,
@@ -48,6 +49,7 @@ enum ExtrusionLoopRole {
 inline bool is_perimeter(ExtrusionRole role)
 {
     return role == erPerimeter
+        || role == erHiddenPerimeter
         || role == erExternalPerimeter
         || role == erOverhangPerimeter;
 }

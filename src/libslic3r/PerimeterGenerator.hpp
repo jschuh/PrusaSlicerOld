@@ -15,6 +15,7 @@ public:
     // Inputs:
     const SurfaceCollection     *slices;
     const ExPolygons            *lower_slices;
+    const ExPolygons            *layer_outline;
     double                       layer_height;
     int                          layer_id;
     Flow                         perimeter_flow;
@@ -45,7 +46,7 @@ public:
         ExtrusionEntityCollection*  gap_fill,
         // Infills without the gap fills
         SurfaceCollection*          fill_surfaces)
-        : slices(slices), lower_slices(nullptr), layer_height(layer_height),
+        : slices(slices), lower_slices(nullptr), layer_outline(nullptr), layer_height(layer_height),
             layer_id(-1), perimeter_flow(flow), ext_perimeter_flow(flow),
             overhang_flow(flow), solid_infill_flow(flow),
             config(config), object_config(object_config), print_config(print_config),
@@ -60,6 +61,7 @@ public:
     double      mm3_per_mm()            const { return m_mm3_per_mm; }
     double      mm3_per_mm_overhang()   const { return m_mm3_per_mm_overhang; }
     Polygons    lower_slices_polygons() const { return m_lower_slices_polygons; }
+    Polygons    layer_outline_polygons() const { return m_layer_outline_polygons; }
 
 private:
     bool        m_spiral_vase;
@@ -67,6 +69,7 @@ private:
     double      m_mm3_per_mm;
     double      m_mm3_per_mm_overhang;
     Polygons    m_lower_slices_polygons;
+    Polygons    m_layer_outline_polygons;
 };
 
 }

@@ -321,7 +321,18 @@ Point SeamPlacer::get_seam(const Layer& layer, const SeamPosition seam_position,
 
     assert(layer_idx < po->layer_count());
 
-    if (this->is_custom_seam_on_layer(layer_idx, po_idx)) {
+    bool has_hidden_perimeters = false;
+    for (const ExtrusionPath& path : loop.paths) {
+        if (path.role() == erPerimeter) {
+            break; // Bail if it's an internal perimeter.
+        } else if (path.role() == erHiddenPerimeter) {
+            has_hidden_perimeters = true;
+            break;
+        }
+    }
+
+    if (has_hidden_perimeters || this->is_custom_seam_on_layer(layer_idx, po_idx)) {
+        // Hidden perimeters can be long segments (particularly for painted segmentation).
         // Seam enf/blockers can begin and end in between the original vertices.
         // Let add extra points in between and update the leghths.
         polygon.densify(MINIMAL_POLYGON_SIDE);
@@ -367,6 +378,8 @@ Point SeamPlacer::get_seam(const Layer& layer, const SeamPosition seam_position,
         const float penaltyConvexVertex = 1.f;
         const float penaltyFlatSurface  = 5.f;
         const float penaltyOverhangHalf = 10.f;
+        // Hidden perimeters get a big bump because they are an ideal seam location.
+        const float penaltyHiddenPerimeter = -10.f;
         // Penalty for visible seams.
        for (size_t i = 0; i < polygon.points.size(); ++ i) {
             float ccwAngle = penalties[i];
@@ -395,6 +408,19 @@ Point SeamPlacer::get_seam(const Layer& layer, const SeamPosition seam_position,
             penalty -= last_pos_weight * bspline_kernel(dist_to_last_pos_proj / dist_max);
             penalties[i] = std::max(0.f, penalty);
         }
+
+       // Apply a negative penalty (bonus) for hidden external perimeters.
+       if (has_hidden_perimeters) {
+           size_t i = 0;
+           for (const ExtrusionPath& path : loop.paths) {
+               for (auto point = path.polyline.points.begin(); point != path.polyline.points.end() - 1; ++point) {
+                   do { // Just overwrite the angle-based penalties for genuinely hidden external perimeters.
+                       if (path.role() == erHiddenPerimeter)
+                           penalties[i] = penaltyHiddenPerimeter;
+                   } while (*point != polygon[i++]);
+               }
+           }
+       }
 
         // Penalty for overhangs.
         if (lower_layer_edge_grid) {

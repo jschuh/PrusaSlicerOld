@@ -2724,7 +2724,7 @@ std::string GCode::_extrude(const ExtrusionPath &path, std::string description, 
     if (is_bridge(path.role())) {
         speed = m_config.get_abs_value("bridge_speed");
     } else if (speed == -1) {
-        if (path.role() == erPerimeter) {
+        if (path.role() == erPerimeter || path.role() == erHiddenPerimeter) {
             speed = m_config.get_abs_value("perimeter_speed");
         } else if (path.role() == erExternalPerimeter) {
             speed = m_config.get_abs_value("external_perimeter_speed");
