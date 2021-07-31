@@ -335,9 +335,12 @@ void PerimeterGenerator::process()
     if (this->lower_slices != NULL && this->config->overhangs) {
         // We consider overhang any part where the entire nozzle diameter is not supported by the
         // lower layer, so we take lower slices and offset them by half the nozzle diameter used 
-        // in the current layer
+        // in the current layer, minus the semi-circular drop over the side of the lower extrusion
+        // and the squish on the side of the current extrusion when it is wider than the nozzle.
         double nozzle_diameter = this->print_config->nozzle_diameter.get_at(this->config->perimeter_extruder-1);
-        m_lower_slices_polygons = offset(*this->lower_slices, float(scale_(+nozzle_diameter/2)));
+        double overhang_threshold = (2 * nozzle_diameter - ext_perimeter_flow.width() - lower_layer_height) / 2;
+        overhang_threshold = std::clamp(overhang_threshold, nozzle_diameter / 4, nozzle_diameter / 2);
+        m_lower_slices_polygons = offset(*this->lower_slices, float(scale_(overhang_threshold)));
     }
 
     // Clipping boundary used for identifying hidden perimeters.

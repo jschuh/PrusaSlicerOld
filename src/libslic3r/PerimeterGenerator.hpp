@@ -18,6 +18,7 @@ public:
     const ExPolygons            *layer_outline;
     double                       layer_height;
     int                          layer_id;
+    double                       lower_layer_height;
     Flow                         perimeter_flow;
     Flow                         ext_perimeter_flow;
     Flow                         overhang_flow;
@@ -48,7 +49,7 @@ public:
         SurfaceCollection*          fill_surfaces)
         : slices(slices), lower_slices(nullptr), layer_outline(nullptr), layer_height(layer_height),
             layer_id(-1), perimeter_flow(flow), ext_perimeter_flow(flow),
-            overhang_flow(flow), solid_infill_flow(flow),
+            overhang_flow(flow), solid_infill_flow(flow), lower_layer_height(0),
             config(config), object_config(object_config), print_config(print_config),
             m_spiral_vase(spiral_vase),
             loops(loops), gap_fill(gap_fill), fill_surfaces(fill_surfaces),
