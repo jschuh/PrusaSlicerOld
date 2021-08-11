@@ -2456,8 +2456,24 @@ std::string GCode::extrude_loop(ExtrusionLoop loop, std::string description, dou
     if (paths.empty()) return "";
 
     // apply the small perimeter speed
-    if (is_perimeter(paths.front().role()) && loop.length() <= SMALL_PERIMETER_LENGTH && speed == -1)
-        speed = m_config.small_perimeter_speed.get_abs_value(m_config.perimeter_speed);
+    if (is_perimeter(paths.front().role()) && speed == -1 && loop.length() <= SMALL_PERIMETER_LENGTH) {
+        bool use_small_perimeter_speed = true;
+        // don't treat the inside of multi-material models as small perimeters
+        if (m_layer->regions().size() != 1) {
+            if (paths.front().role() == erPerimeter) {
+                use_small_perimeter_speed = false;
+            } else {
+                for (const auto path : paths) {
+                    if (path.role() == erHiddenPerimeter) {
+                        use_small_perimeter_speed = false;
+                        break;
+                    }
+                }
+            }
+        }
+        if (use_small_perimeter_speed)
+            speed = m_config.small_perimeter_speed.get_abs_value(m_config.perimeter_speed);
+    }
 
     // extrude along the path
     std::string gcode;
